@@ -22,7 +22,7 @@ export const deleteOne = (Model: any) =>
             return next(new AppError('No document found with that ID', 404));
         }
 
-        res.status(204).json({
+        return res.status(204).json({
             status: 'success',
             data: null,
         });
@@ -38,7 +38,7 @@ export const updateOne = (Model: any) =>
             return next(new AppError('Document with that Id not Found', 404));
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             status: 'success',
             data: {
                 data: doc,
@@ -48,10 +48,10 @@ export const updateOne = (Model: any) =>
 
 export const createOne = (Model: any) =>
     catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-        console.log("yeta")
+
         const doc = await Model.create(req.body);
 
-        res.status(201).json({
+        return res.status(201).json({
             status: 'success',
             data: {
                 data: doc,
@@ -69,7 +69,7 @@ export const getOne = (Model: any, popOptions?: string) =>
             return next(new AppError('Tour not Found', 404));
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             status: 'success',
             data: {
                 doc,
@@ -91,7 +91,7 @@ export const getAll = (Model: any) =>
             .paginate();
         const docs = await features.query;
 
-        res.status(200).json({
+        return res.status(200).json({
             status: 'success',
             requestedAt: req.requestTime,
             results: docs.length,

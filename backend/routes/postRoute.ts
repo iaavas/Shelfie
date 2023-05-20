@@ -1,5 +1,5 @@
 import express from 'express';
-import { createPost, getAllPosts, getPost, updatePost, deletePost } from '../controllers/postController';
+import { createPost, getAllPosts, getPost, updatePost, deletePost, createComment } from '../controllers/postController';
 import { protect, restrictTo } from '../controllers/authController';
 
 const router = express.Router({ mergeParams: true });
@@ -15,6 +15,7 @@ router
 
 router
     .route('/:id')
+    .post(createComment)
     .get(getPost)
     .patch(
         restrictTo('user'),
@@ -24,5 +25,7 @@ router
         restrictTo('user'),
         deletePost
     );
+
+
 
 export default router;

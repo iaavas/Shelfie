@@ -22,7 +22,7 @@ const deleteOne = (Model) => (0, catchAsync_1.default)((req, res, next) => __awa
     if (!doc) {
         return next(new appError_1.default('No document found with that ID', 404));
     }
-    res.status(204).json({
+    return res.status(204).json({
         status: 'success',
         data: null,
     });
@@ -36,7 +36,7 @@ const updateOne = (Model) => (0, catchAsync_1.default)((req, res, next) => __awa
     if (!doc) {
         return next(new appError_1.default('Document with that Id not Found', 404));
     }
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         data: {
             data: doc,
@@ -45,9 +45,8 @@ const updateOne = (Model) => (0, catchAsync_1.default)((req, res, next) => __awa
 }));
 exports.updateOne = updateOne;
 const createOne = (Model) => (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("yeta");
     const doc = yield Model.create(req.body);
-    res.status(201).json({
+    return res.status(201).json({
         status: 'success',
         data: {
             data: doc,
@@ -63,7 +62,7 @@ const getOne = (Model, popOptions) => (0, catchAsync_1.default)((req, res, next)
     if (!doc) {
         return next(new appError_1.default('Tour not Found', 404));
     }
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         data: {
             doc,
@@ -83,7 +82,7 @@ const getAll = (Model) => (0, catchAsync_1.default)((req, res) => __awaiter(void
         .limitFields()
         .paginate();
     const docs = yield features.query;
-    res.status(200).json({
+    return res.status(200).json({
         status: 'success',
         requestedAt: req.requestTime,
         results: docs.length,

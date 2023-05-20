@@ -17,15 +17,13 @@ const PostSchema = new Schema({
         min: 0
     },
 
+    likedBy: [{
+        type: String,
+
+
+    }],
+
     createdAt: { type: Date, default: Date.now },
-
-    post: {
-        type: Schema.Types.ObjectId,
-        ref: 'Post'
-
-    }
-
-
 
 }, {
     timestamps: true,
@@ -34,11 +32,11 @@ const PostSchema = new Schema({
 })
 
 
-
-
-
-
-
+PostSchema.virtual('comments', {
+    ref: 'Comment',
+    foreignField: 'post',
+    localField: '_id',
+});
 
 
 const Post = models.Post || model("Post", PostSchema)

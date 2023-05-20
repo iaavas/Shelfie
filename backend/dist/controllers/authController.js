@@ -12,7 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restrictTo = exports.protect = exports.login = exports.signup = void 0;
+exports.isLoggedIn = exports.updatePassword = exports.resetPassword = exports.forgotPassword = exports.restrictTo = exports.protect = exports.login = exports.signup = void 0;
+const crypto_1 = __importDefault(require("crypto"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = __importDefault(require("./../models/user"));
 const catchAsync_1 = __importDefault(require("./../utils/catchAsync"));
@@ -95,3 +96,80 @@ const restrictTo = (...roles) => {
     };
 };
 exports.restrictTo = restrictTo;
+const forgotPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_1.default.findOne({ email: req.body.email });
+    if (!user)
+        return next(new appError_1.default('There is no user with the email address', 404));
+    const resetToken = user.createPasswordResetToken();
+    console.log('asasas');
+    yield user.save({ validateBeforeSave: false });
+    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+    const message = `Forgot your password? Submit a PATCH request with your new password to ${resetUrl}`;
+    try {
+        // sendEmail implementation goes here
+    }
+    catch (err) {
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        yield user.save({ validateBeforeSave: false });
+        return next(new appError_1.default('There was an error sending the email', 500));
+    }
+    res.status(200).json({
+        status: 'success',
+        message: 'Token sent to email',
+    });
+});
+exports.forgotPassword = forgotPassword;
+exports.resetPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const hashedToken = crypto_1.default
+        .createHash('sha256')
+        .update(req.params.token)
+        .digest('hex');
+    const user = yield user_1.default.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() },
+    });
+    if (!user)
+        return next(new appError_1.default('Token Expired', 401));
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.confirmPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    const token = signToken(user._id);
+    res.status(201).json({
+        status: 'success',
+        token,
+    });
+}));
+exports.updatePassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const user = yield user_1.default.findById(req.user.id).select('+password');
+    if (!(yield (user === null || user === void 0 ? void 0 : user.correctPassword(req.body.passwordCurrent, user === null || user === void 0 ? void 0 : user.password)))) {
+        return next(new appError_1.default('Your current password is wrong.', 401));
+    }
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    yield (user === null || user === void 0 ? void 0 : user.save());
+    // createSendToken implementation goes here
+}));
+const isLoggedIn = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    if (req.cookies.jwt) {
+        try {
+            const decoded = jsonwebtoken_1.default.verify(req.cookies.jwt, process.env.JWT_SECRET);
+            const currentUser = yield user_1.default.findById(decoded.id);
+            if (!currentUser) {
+                return next();
+            }
+            if (currentUser.changedPasswordAfter(decoded.iat)) {
+                return next();
+            }
+            res.locals.user = currentUser;
+            return next();
+        }
+        catch (err) {
+            return next();
+        }
+    }
+    next();
+});
+exports.isLoggedIn = isLoggedIn;

@@ -6,7 +6,7 @@ import catchAsync from '../utils/catchAsync';
 export const createPost = createOne(Post);
 
 export const getAllPosts = getAll(Post);
-export const getPost = getOne(Post);
+export const getPost = getOne(Post, 'comments');
 
 export const updatePost = updateOne(Post);
 export const deletePost = deleteOne(Post);
@@ -15,9 +15,14 @@ export const deletePost = deleteOne(Post);
 export const likePost = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    const userId = req.query.id;
+    // @ts-ignore
+    const userId = req.user.id;
+
+
 
     const post = await Post.findById(id);
+
+
 
     if (!post) {
         return new Response('Post Not Found', { status: 400 });
@@ -26,27 +31,63 @@ export const likePost = catchAsync(async (req: Request, res: Response) => {
 
 
     if (post.likedBy.includes(userId)) {
-        await Post.findByIdAndUpdate(
+        const unlikedPost = await Post.findByIdAndUpdate(
             id,
             { $inc: { likes: -1 }, $pull: { likedBy: userId } },
             { new: true }
         );
 
-        res.status(200).json({
-            status: 'Unliked'
+        console.log("yeta");
+
+        return res.status(200).json({
+            status: 'Unliked',
+            data: unlikedPost
         });
     }
 
-    await Post.findByIdAndUpdate(
+    const updatedPost = await Post.findByIdAndUpdate(
         id,
         { $inc: { likes: 1 }, $push: { likedBy: userId } },
         { new: true }
     );
 
-    res.status(200).json({
-        status: 'Liked'
+    return res.status(200).json({
+        status: 'Liked',
+        data: updatedPost
     });
 
+
+
+})
+
+export const createComment = catchAsync(async (req: Request, res: Response) => {
+    const id = req.params.id;
+
+    // @ts-ignore
+    const userId = req.user.id;
+
+
+
+    const post = await Post.findById(id);
+
+
+
+    if (!post) {
+        return new Response('Post Not Found', { status: 400 });
+    }
+
+    const { comment } = req.body;
+
+    const updatedPost = await Post.findByIdAndUpdate(
+        id,
+        { $push: { comments: comment } },
+        { new: true }
+    );
+
+    return res.status(200).json({
+        status: 'Liked',
+        data: updatedPost
+    });
 
 
 })

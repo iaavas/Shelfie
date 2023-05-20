@@ -12,8 +12,8 @@ import {
 import {
     getMe,
     getUser,
-    uploadUserPhoto,
-    resizeUserPhoto,
+    // uploadUserPhoto,
+    // resizeUserPhoto,
     updateMe,
     deleteMe,
     getAllUsers,
@@ -35,7 +35,7 @@ router.use(protect);
 router.patch('/updateMyPassword', protect, updatePassword);
 router.get('/me', protect, getMe, getUser);
 
-router.patch('/updateMe', protect, uploadUserPhoto, resizeUserPhoto, updateMe);
+router.patch('/updateMe', protect, updateMe);
 router.delete('/deleteMe', protect, deleteMe);
 
 router.use(restrictTo('admin'));
